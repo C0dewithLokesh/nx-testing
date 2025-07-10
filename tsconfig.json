@@ -2,5 +2,18 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
-  "references": []
+  "references": [
+    {
+      "path": "./packages/sbl-shared"
+    },
+    {
+      "path": "./apps/sbl-frontend"
+    },
+    {
+      "path": "./packages/common"
+    },
+    {
+      "path": "./packages/sbl-shared"
+    }
+  ]
 }
