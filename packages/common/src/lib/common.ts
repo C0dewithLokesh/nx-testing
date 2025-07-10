@@ -1,3 +1,7 @@
 export function common(): string {
-  return 'common';
+  return 'common files';
+}
+
+export function common2(): string {
+  return 'common2';
 }
