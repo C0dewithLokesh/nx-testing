@@ -13,7 +13,7 @@
       "path": "./packages/common"
     },
     {
-      "path": "./packages/sbl-shared"
+      "path": "./apps/sbl-client"
     }
   ]
 }

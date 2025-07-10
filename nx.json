@@ -7,7 +7,7 @@
       "!{projectRoot}/.eslintrc.json",
       "!{projectRoot}/eslint.config.mjs"
     ],
-    "sharedGlobals": []
+    "sharedGlobals": ["{workspaceRoot}/.github/workflows/deploy.yml"]
   },
   "nxCloudId": "686f42b50c0c7b2bb31c25f0",
   "plugins": [
@@ -23,8 +23,7 @@
           "buildDepsName": "build-deps",
           "watchDepsName": "watch-deps"
         }
-      },
-      "exclude": ["packages/common/*"]
+      }
     },
     {
       "plugin": "@nx/js/typescript",
@@ -34,7 +33,7 @@
           "targetName": "typecheck"
         }
       },
-      "exclude": ["packages/sbl-shared/*"]
+      "exclude": ["packages/sbl-shared/*", "packages/common/*"]
     },
     {
       "plugin": "@nx/eslint/plugin",
@@ -49,6 +48,16 @@
         "buildTargetName": "build",
         "devTargetName": "dev",
         "serveStaticTargetName": "serve-static",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    },
+    {
+      "plugin": "@nx/webpack/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "previewTargetName": "preview",
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
       }
