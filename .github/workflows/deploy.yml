@@ -44,29 +44,29 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
-      # 🔍 Determine list of services based on input mode
+      # ✅ Get affected or all services (no temp files)
       - name: Get list of services based on mode
         id: get-services
         run: |
           if [ "${{ github.event.inputs.mode }}" = "all" ]; then
-            echo "📦 Mode: ALL — listing all services"
-            pnpm exec nx show projects --type=app > services.txt
+            echo "📦 Mode: ALL — listing services in apps/*"
+            services=$(pnpm exec nx show projects --projects "apps/*")
           else
             echo "🔍 Mode: AFFECTED — listing affected services"
-            pnpm exec nx show projects --affected --type=app > services.txt
+            services=$(pnpm exec nx show projects --affected)
           fi
 
-          cat services.txt
+          echo "$services"
 
-          # Convert to comma-separated list for later use
-          services=$(paste -sd "," services.txt)
-          echo "services=$services" >> "$GITHUB_OUTPUT"
+          # Convert to CSV for later use
+          services_csv=$(echo "$services" | paste -sd "," -)
+          echo "services=$services_csv" >> "$GITHUB_OUTPUT"
 
-      # 🧪 Run lint, test, build for affected targets (you can replace this with per-service logic)
+      # 🧪 Lint, test, build (only for affected)
       - name: Run tasks (lint, test, build)
         run: pnpm exec nx affected -t lint test build
 
-      # 🖨️ Log the selected services clearly
+      # 🖨️ Log the list of services
       - name: Log selected services
         run: |
           echo "📝 Selected Services: ${{ steps.get-services.outputs.services }}"
