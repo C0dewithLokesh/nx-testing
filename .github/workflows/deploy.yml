@@ -14,9 +14,6 @@ on:
         options:
           - affected
           - all
-      service_name:
-        description: 'Optional: Deploy specific service (overrides scope)'
-        required: false
       environment:
         description: 'Environment to deploy to'
         required: true
@@ -58,44 +55,64 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
+      # 🚫 Enforce environment if not on main branch
+      - name: Enforce environment rules
+        id: enforce-env
+        run: |
+          BRANCH="${GITHUB_REF##*/}"
+          INPUT_ENV="${{ github.event.inputs.environment }}"
+
+          echo "🔁 Current Branch: $BRANCH"
+          echo "🌍 Requested Environment: $INPUT_ENV"
+
+          if [ "$BRANCH" != "main" ]; then
+            echo "🔒 Non-main branch detected. Forcing environment to 'dev'."
+            ENVIRONMENT="dev"
+          else
+            ENVIRONMENT="$INPUT_ENV"
+          fi
+
+          echo "env=$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+
+      # 📦 Log deployment info
       - name: Log deployment configuration
         run: |
           echo "🚀 Deployment Configuration:"
-          echo "🔹 Environment       : ${{ github.event.inputs.environment }}"
+          echo "🔹 Environment       : ${{ steps.enforce-env.outputs.env }}"
           echo "🔹 Deployment Scope  : ${{ github.event.inputs.deployment_scope }}"
-          echo "🔹 Service Name      : ${{ github.event.inputs.service_name }}"
           echo "🔹 Branch Name       : ${{ github.event.inputs.branch_name }}"
+          echo "🔹 Git Branch        : ${GITHUB_REF##*/}"
 
-      # ✅ Get affected or all services (no temp files)
-      - name: Get list of services based on mode
+      # 🧠 Get affected or all services
+      - name: Get list of services based on scope
         id: get-services
         run: |
           if [ "${{ github.event.inputs.deployment_scope }}" = "all" ]; then
-            echo "📦 Mode: ALL — listing services in apps/*"
+            echo "📦 Scope: ALL — listing services in apps/*"
             services=$(pnpm exec nx show projects --projects "apps/*")
           else
-            echo "🔍 Mode: AFFECTED — listing affected services"
+            echo "🔍 Scope: AFFECTED — listing affected services"
             services=$(pnpm exec nx show projects --affected)
           fi
 
           echo "$services"
 
-          # Convert to CSV for later use
+          # Convert to CSV for potential future use
           services_csv=$(echo "$services" | paste -sd "," -)
           echo "services=$services_csv" >> "$GITHUB_OUTPUT"
 
-      # 🧪 Lint, test, build (only for affected)
+      # 🧪 Lint, test, build based on scope
       - name: Run tasks (lint, test, build)
         run: |
           if [ "${{ github.event.inputs.deployment_scope }}" = "all" ]; then
-            echo "📦 Mode: ALL — listing services in apps/*"
+            echo "🧪 Running tasks on ALL projects"
             pnpm exec nx run-many -t lint test build --all
           else
-            echo "🔍 Mode: AFFECTED — listing affected services"
+            echo "🧪 Running tasks on AFFECTED projects"
             pnpm exec nx affected -t lint test build
           fi
 
-      # 🖨️ Log the list of services
+      # 🖨️ Log selected service list
       - name: Log selected services
         run: |
           echo "📝 Selected Services: ${{ steps.get-services.outputs.services }}"
